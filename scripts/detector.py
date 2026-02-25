@@ -21,12 +21,19 @@ import subprocess as sp
 from scipy.stats import linregress
 from scipy.signal import find_peaks,peak_prominences
 
+import matplotlib
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.animation as manimation
 import matplotlib.cm as cm
 from matplotlib.lines import Line2D
 
 ## Issue with 'SettingWithCopyWarning' in step_3
 pd.options.mode.chained_assignment = None  # default='warn'
+makevideo = False
+
 
 class detector(object):
     '''Particle detection platform for identifying the group climbing velocity of a 
@@ -65,7 +72,23 @@ class detector(object):
         self.check_variable_formats()
 
         ## Setting a color map
-        self.vial_color_map = cm.jet
+        #self.vial_color_map = cm.jet
+        #colors = [(1, 0, 0),(1, 0, 0),(1, 0, 0),(1, 0, 0),(1, 0, 0), (1, 0, 0),] 
+        #cmap_name = 'aging_colors'
+        #cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=6)
+
+        #colors = [(0.047, 0.380, 0.427),(1, 1, 1),
+                  #(0.581, 0.129, 0.575),(1, 1, 1),(1, 1, 1), 
+                  #(0.581, 0.067, 0.000)] 
+        #cmap_name = 'hTDP43_colors'
+        #cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=6)
+        #self.vial_color_map = cmap
+
+        #colors = [(0.047, 0.380, 0.427),(0.581, 0.129, 0.575),(0.581, 0.067, 0.000),(0, 0, 1),(0.984, 0.008, 0.027)] 
+        colors = [(0.047, 0.380, 0.427),(0.047, 0.380, 0.427),(0.581, 0.067, 0.000),(0.581, 0.067, 0.000),(0, 0, 1),(0.984, 0.008, 0.027)] 
+        cmap_name = 'colors'
+        cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=6)
+        self.vial_color_map = cmap
         
         ## Create a conversion factor
         if self.convert_to_cm_sec: self.conversion_factor = self.pixel_to_cm / self.frame_rate
@@ -643,6 +666,7 @@ class detector(object):
         df['t'] = [round(item/self.frame_rate,3) for item in df.frame]
         df['mass'] = df['mass'].astype(int)
         df['size'] = df.size.round(3)
+        print(df.size)
         df['ecc'] = df.ecc.round(3)
         df['signal'] = df.signal.round(2)
         df['raw_mass'] = df['mass'].astype(int)
@@ -1189,6 +1213,61 @@ class detector(object):
         print(self.df_slopes[['vial_ID','slope','r_value']])
         print('\n')
         return
+    
+    def step_8(self):
+        '''Writing the movie overlaying points'''
+        if self.debug: 
+            print("-- [ step 8] Writing movie")
+        dataf = self.df_big[self.df_big.True_particle]
+        
+        FFMpegWriter = manimation.writers['ffmpeg']
+        metadata = dict(title='Movie Test', artist='Matplotlib',
+                comment='Movie support!')
+        writer = FFMpegWriter(fps=60, codec='h264', bitrate=60000, metadata=metadata)
+
+        fig = plt.figure()
+        video_name = self.name_nosuffix + '-video.mp4'
+
+        with writer.saving(fig, video_name, 400):
+        
+            for frame in range(self.crop_n):
+                
+                plt.clf()
+                df = dataf[(dataf.frame == frame)]
+                
+                if self.debug: print('detector.image_plot')
+                
+                ## Get frame number
+                try: frame = int(frame)
+                except: frame = None
+    
+                ## Issue with plotting if last frame in stack
+                if frame == self.n_frames: image = self.clean_stack[frame-1]
+                else: image = self.clean_stack[frame]
+                alpha = .25
+    
+                ## Plotting image
+                plt.imshow(image,cmap=cm.Greys_r,origin='upper')
+                
+                ## Plotting vertical bin lines
+                #plt.vlines(self.bin_lines,0,image.shape[0])  
+                
+                ## Coloring spots by vial
+                df = df.sort_values(by='vial')
+                df = df[df.vial != 0]
+                if self.vials >= 1:
+                    plt.scatter(df.x, df.y, 
+                                s = 50, 
+                                alpha = alpha,
+                                c = df['vial'], 
+                                cmap=self.vial_color_map)
+                plt.axis('off')
+                    
+                writer.grab_frame()
+        plt.close()        
+    
+        return
+    
         
     def image_plot(self,df,frame=None,ax=None,ylim=[0,1000]):
         '''Image subplot for the diagnostic plot
@@ -1344,6 +1423,8 @@ class detector(object):
         self.step_5()
         self.step_6(gui=True)
         self.step_7()
+        if makevideo:
+            self.step_8()
         
         #### Working through the GUI plots        
         ## Setting plot (upper left) for background image

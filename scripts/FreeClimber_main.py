@@ -198,6 +198,7 @@ class FreeClimber(object):
             d.step_5() # Calculates local linear regressions
             d.step_6(gui = self.args.optimization_plots) # Creating diagnostic/other plots 
             d.step_7() # Writing the video's slope file
+            d.step_8() # Writing the movie
             self.first_run = False
         return
 
