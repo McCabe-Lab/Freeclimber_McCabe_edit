@@ -14,26 +14,89 @@ Compared to the original FreeClimber repository:
 Upstream repository:
 https://github.com/adamspierer/FreeClimber
 
-## Installation
+## Installation and requirements
 
-Please follow the installation instructions in:
+> **Important:** This tutorial covers the **McCabe Lab fork** of FreeClimber, which includes video export functionality (annotated MP4 output with particle overlays). Do **not** clone or install from the upstream repository — follow the steps below instead.
 
-`README_UPSTREAM.md`
+### Requirements
 
-(Original FreeClimber installation guide preserved for completeness.)
+```
+- matplotlib    [3.x   ]
+- numpy         [2.x   ]
+- pandas        [2.x   ]
+- scipy         [1.x   ]
+- trackpy       [0.7   ]
+- wxPython      [4.2.x ]
+- ffmpeg        [7.x   ] (bundled via conda)
+- ffmpeg-python [0.2.0 ]
+- python        [3.10  ]
+```
 
-## Additional requirements (for video generation)
+All dependencies are pinned in `environment.yml` and installed automatically in the steps below.
 
-Video export requires:
+### Step 1 — Install Anaconda
 
-- ffmpeg
-- matplotlib with animation support
+We recommend running this package in an Anaconda-based virtual environment. Anaconda can be downloaded [here](https://docs.anaconda.com/anaconda/install/).
 
-On macOS:
-brew install ffmpeg
+Make sure `conda` is installed (should return something like `conda 24.x.x`):
 
-On Ubuntu:
-sudo apt install ffmpeg
+```bash
+conda -V
+```
+
+Update conda if needed (press `y` when prompted):
+
+```bash
+conda update conda
+```
+
+### Step 2 — Clone this repository
+
+```bash
+cd <folder of interest>
+git clone https://github.com/McCabe-Lab/Freeclimber_McCabe_edit.git
+cd Freeclimber_McCabe_edit
+```
+
+### Step 3 — Create and activate the conda environment
+
+The repository includes an `environment.yml` file that installs all required dependencies, including ffmpeg, at the correct versions. No separate `pip install` steps are needed.
+
+```bash
+conda env create -f environment.yml
+conda activate fc
+```
+
+This will create an environment named `fc` running Python 3.10.
+
+> If you already have an `fc` environment from a previous install and want to start fresh:
+> ```bash
+> conda env remove -n fc
+> conda env create -f environment.yml
+> ```
+
+### Step 4 — Verify the installation
+
+Run a quick test using the provided example video to confirm everything is working:
+
+**macOS:**
+```bash
+pythonw ./scripts/FreeClimber_gui.py --video_file ./example/w1118_m_2_1.h264
+```
+
+**Linux:**
+```bash
+python ./scripts/FreeClimber_gui.py --video_file ./example/w1118_m_2_1.h264
+```
+
+The GUI should open with the example video loaded. Common errors and fixes:
+
+| Error | Fix |
+|---|---|
+| `This program needs access to the screen...` | Use `pythonw` instead of `python` (macOS only) |
+| `ModuleNotFoundError: No module named 'ffmpeg'` | Make sure you activated the correct environment: `conda activate fc` |
+| `ModuleNotFoundError: No module named 'wx'` | Same as above — wxPython is installed inside the `fc` environment |
+
 
 ## Running the analysis with video export
 
@@ -84,6 +147,9 @@ self.vial_color_map = cm.viridis
 
 Changing the colormap affects visualization only and does not alter
 particle detection, tracking, or velocity computation.
+
+## Tutorial
+Refer to TUTORIAL.md
 
 ## License and Attribution
 
