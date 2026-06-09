@@ -58,6 +58,10 @@ git clone https://github.com/McCabe-Lab/Freeclimber_McCabe_edit.git
 cd Freeclimber_McCabe_edit
 ```
 
+> **Already have FreeClimber installed?** Do not reuse your existing environment — dependency versions are incompatible with this fork. Create a fresh environment as below. Your original FreeClimber installation will be unaffected since it lives in a separate conda environment.
+> 
+> If you previously cloned `adamspierer/FreeClimber`, you also need to clone this repository separately — the scripts are not interchangeable.
+
 ### Step 3 — Create and activate the conda environment
 
 The repository includes an `environment.yml` file that installs all required dependencies, including ffmpeg, at the correct versions. No separate `pip install` steps are needed.
